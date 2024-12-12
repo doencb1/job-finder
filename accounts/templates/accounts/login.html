@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Đăng Nhập</h1>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Đăng Nhập</button>
+        </form>
+        <p>Chưa có tài khoản? <a href="{% url 'register' %}">Đăng Ký</a></p>
+    </div>
+</body>
+</html>
