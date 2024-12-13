@@ -20,13 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-f+vzis@k#-z$ayq-jiu!_zsbqrot-9c_x$&s%%%njht+2$ahms'
+SECRET_KEY = 'django-insecure-fvsd%avb($4k+jo+p%ljsc9-c3p((ckcwjy6fxg2g_qkbziwif'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 
 # Application definition
@@ -39,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-    'jobs',
+    'subjects',
 ]
 
 MIDDLEWARE = [
@@ -47,7 +46,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',  # Middleware xác thực
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -62,7 +61,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
-                'django.template.context_processors.request',  # Cần thiết để kiểm tra request.user
+                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -79,15 +78,10 @@ WSGI_APPLICATION = 'jobfinder.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'joblist',
-        'USER': 'root',
-        'PASSWORD': 'Baodc1@3',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 
 # Password validation
@@ -124,17 +118,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-# Đường dẫn đến thư mục lưu trữ tệp static sau khi chạy collectstatic
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# URL để truy cập tệp static
-STATIC_URL = '/static/'
-
+STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CSRF_TRUSTED_ORIGINS = [
-    'https://d527-2001-ee0-1ad3-5475-601e-3ac2-d93f-d133.ngrok-free.app'
-]
+
+# Redirect after successful login
+LOGIN_REDIRECT_URL = '/'
+
+# Redirect if login required
+LOGIN_URL = '/accounts/login/'
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+

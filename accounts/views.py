@@ -1,32 +1,22 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import login, logout
+from django.contrib import messages
+from subjects.utils import login_and_get_token
 
-# View đăng ký
-def register(request):
-    if request.method == 'POST':
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            login(request, user)
-            return redirect('/')
-    else:
-        form = UserCreationForm()
-    return render(request, 'accounts/register.html', {'form': form})
-
-# View đăng nhập
 def login_view(request):
     if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('/')
-    else:
-        form = AuthenticationForm()
-    return render(request, 'accounts/login.html', {'form': form})
+        username = request.POST.get('username')
+        password = request.POST.get('password')
 
-# View đăng xuất
+        login_url = "https://sinhvien1.tlu.edu.vn/education/oauth/token"
+        token = login_and_get_token(login_url, username, password)
+
+        if token:
+            request.session['access_token'] = token  # Lưu token vào session
+            return redirect('subjects:dashboard')  # Chuyển đến dashboard
+        else:
+            messages.error(request, "Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản hoặc mật khẩu.")
+    
+    return render(request, 'accounts/login.html')
 def logout_view(request):
     logout(request)
-    return redirect('/')
+    return redirect('accounts:login')
