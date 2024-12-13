@@ -25,8 +25,11 @@ SECRET_KEY = 'django-insecure-fvsd%avb($4k+jo+p%ljsc9-c3p((ckcwjy6fxg2g_qkbziwif
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*','e3ef-2405-4803-e296-fe40-7412-4206-d65-bfc5.ngrok-free.app',]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://e3ef-2405-4803-e296-fe40-7412-4206-d65-bfc5.ngrok-free.app',  # URL của ngrok
+]
 
 # Application definition
 

@@ -37,6 +37,7 @@
         .content {
             margin-left: 250px;
             padding: 20px;
+            padding-top: 60px; /* Thêm khoảng cách để tránh bị navbar đè */
         }
 
         .navbar {
@@ -96,7 +97,7 @@
     <div class="sidebar">
         <h4 class="text-center">Hệ Thống</h4>
         <a href="{% url 'subjects:dashboard' %}">Trang chủ</a>
-        <a href="#">Tìm việc</a>
+        <a href="{% url 'subjects:findjob' %}">Tìm việc</a>
         <a href="{% url 'subjects:suggest' %}">Gợi ý</a>
     </div>
 

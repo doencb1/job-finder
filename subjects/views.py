@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .utils import process_response_to_table, get_gemini_comment_and_suggestion, search_job
 import requests
-
+from django.views.decorators.cache import never_cache
+@never_cache
 def dashboard(request):
     token = request.session.get('access_token')
     if not token:
@@ -26,7 +27,7 @@ def dashboard(request):
             return render(request, 'subjects/dashboard.html', {'error': f"Lỗi khi lấy dữ liệu từ API: {response.status_code}"})
     except Exception as e:
         return render(request, 'subjects/dashboard.html', {'error': f"Lỗi hệ thống: {e}"})
-
+@never_cache
 def suggest_job(request):
     token = request.session.get('access_token')
     if not token:
@@ -62,3 +63,16 @@ def suggest_job(request):
             return render(request, 'subjects/suggest.html', {'error': f"Lỗi khi lấy dữ liệu từ API: {response.status_code}"})
     except Exception as e:
         return render(request, 'subjects/suggest.html', {'error': f"Lỗi hệ thống: {e}"})
+@never_cache
+def findjob(request):
+    jobs = None
+    error = None
+
+    if request.method == 'POST':
+        job_title = request.POST.get('job_title')
+        if job_title:
+            jobs = search_job(job_title)
+            if not jobs:
+                error = "Không tìm thấy công việc nào phù hợp với từ khóa của bạn."
+
+    return render(request, 'subjects/findjob.html', {'jobs': jobs, 'error': error})

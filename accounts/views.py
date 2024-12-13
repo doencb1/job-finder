@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from subjects.utils import login_and_get_token
+from django.contrib.auth import logout
 
 def login_view(request):
     if request.method == 'POST':

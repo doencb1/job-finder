@@ -95,26 +95,30 @@ model = genai.GenerativeModel('gemini-pro')
 # Hàm lấy nhận xét và gợi ý công việc từ Gemini
 def get_gemini_comment_and_suggestion(grades):
     prompt = (
-        f"Given the following IT subject grades: {grades}, provide a detailed comment "
-        "in Vietnamese about the performance in each subject, including strengths and areas for improvement. "
-        "Then suggest one specific job in English from the following list: Developer, Business Analyst, AI, or Network."
-    )
+    f"Given the following IT subject grades: {grades}, provide a detailed comment in Vietnamese about the performance in each subject, including strengths and areas for improvement. Then suggest one specific job in English from the following list: Developer, Business Analyst, AI, Software Engineer or Network. Format the response as: 'Comment: [Your detailed comment here in Vietnamese]. Suggested job: [Job title here in English].'"
+)
+
     print("Prompt sent to Gemini:", prompt)  # Debug prompt
 
     try:
+        # Get response from Gemini API
         response = model.generate_content(prompt)
         response_text = response.text.strip()
-        print("Gemini API response:", response_text)  # Debug API response
 
-        # Phân tách nhận xét và gợi ý công việc
+        # Tách nhận xét và công việc từ phản hồi của Gemini
         comment = ""
-        suggested_job = "Developer"
+        job_title = "Developer"  # Default job title
         if "Comment:" in response_text and "Suggested job:" in response_text:
             parts = response_text.split("Suggested job:")
             comment = parts[0].replace("Comment:", "").strip()
-            suggested_job = parts[1].strip()
-
-        return comment, suggested_job
+            job_title = parts[1].strip()
+        
+        # Đảm bảo công việc được gợi ý nằm trong danh sách cho phép
+        valid_jobs = ['Developer', 'Business Analyst', 'AI', 'Network','Software Engineer']
+        if job_title not in valid_jobs:
+            job_title = "Developer"  # Default nếu không hợp lệ
+        
+        return comment, job_title
     except Exception as e:
         print(f"Error in Gemini response: {e}")
         return "Không thể lấy nhận xét từ Gemini.", "Developer"
@@ -171,10 +175,9 @@ def suggest(request):
 
                 # Lấy nhận xét và công việc được gợi ý từ Gemini
                 comment, suggested_job = get_gemini_comment_and_suggestion(grades_text)
-
                 # Tìm kiếm công việc trên Adzuna
                 jobs = search_job(suggested_job)
-
+            
                 return render(request, 'subjects/suggest.html', {
                     'comment': comment,
                     'suggested_job': suggested_job,
