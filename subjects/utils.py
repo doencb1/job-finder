@@ -1,5 +1,8 @@
 import requests
 import pandas as pd
+from bs4 import BeautifulSoup
+import json
+from django.shortcuts import render, redirect
 import google.generativeai as genai
 
 # Hàm đăng nhập và lấy token
@@ -95,7 +98,8 @@ model = genai.GenerativeModel('gemini-pro')
 # Hàm lấy nhận xét và gợi ý công việc từ Gemini
 def get_gemini_comment_and_suggestion(grades):
     prompt = (
-    f"Given the following IT subject grades: {grades}, provide a detailed comment in Vietnamese about the performance in each subject, including strengths and areas for improvement. Then suggest one specific job in English from the following list: Developer, Business Analyst, AI, Software Engineer or Network. Format the response as: 'Comment: [Your detailed comment here in Vietnamese]. Suggested job: [Job title here in English].'"
+    # f"Given the following IT subject grades: {grades}, provide a detailed comment in Vietnamese about the performance in each subject, including strengths and areas for improvement. Then suggest one specific job in English from the following list: Developer, Business Analyst, AI, Software Engineer or Network. Format the response as: 'Comment: [Your detailed comment here in Vietnamese]. Suggested job: [Job title here in English].'"
+    f"Given the following IT subject grades: {grades}, provide a detailed comment in Vietnamese about the performance in each subject, including strengths and areas for improvement. Then suggest one specific job in English. Format the response as: 'Comment: [Your detailed comment here in Vietnamese]. Suggested job: [Job title here in English].'"
 )
 
     print("Prompt sent to Gemini:", prompt)  # Debug prompt
@@ -113,45 +117,88 @@ def get_gemini_comment_and_suggestion(grades):
             comment = parts[0].replace("Comment:", "").strip()
             job_title = parts[1].strip()
         
-        # Đảm bảo công việc được gợi ý nằm trong danh sách cho phép
-        valid_jobs = ['Developer', 'Business Analyst', 'AI', 'Network','Software Engineer']
-        if job_title not in valid_jobs:
-            job_title = "Developer"  # Default nếu không hợp lệ
+        # # Đảm bảo công việc được gợi ý nằm trong danh sách cho phép
+        # valid_jobs = ['Developer', 'Business Analyst', 'AI', 'Network','Software Engineer']
+        # if job_title not in valid_jobs:
+        #     job_title = "Developer"  # Default nếu không hợp lệ
         
         return comment, job_title
     except Exception as e:
         print(f"Error in Gemini response: {e}")
         return "Không thể lấy nhận xét từ Gemini.", "Developer"
 
-# Hàm tìm kiếm công việc từ Adzuna
-def search_job(job_title):
-    ADZUNA_API_KEY = "4cceccbea4e827a4c899a8a55f0f995b"
-    ADZUNA_APP_ID = "296baac4"
-    url = "https://api.adzuna.com/v1/api/jobs/us/search/1"
+# # Hàm tìm kiếm công việc từ Adzuna
+# def search_job(job_title):
+#     ADZUNA_API_KEY = "4cceccbea4e827a4c899a8a55f0f995b"
+#     ADZUNA_APP_ID = "296baac4"
+#     url = "https://api.adzuna.com/v1/api/jobs/us/search/1"
+#     params = {
+#         "app_id": ADZUNA_APP_ID,
+#         "app_key": ADZUNA_API_KEY,
+#         "what": job_title,
+#         "results_per_page": 10
+#     }
+#     try:
+#         response = requests.get(url, params=params)
+#         if response.status_code == 200:
+#             data = response.json()
+#             jobs = []
+#             for result in data.get('results', []):
+#                 jobs.append({
+#                     "title": result.get('title'),
+#                     "company": result.get('company', {}).get('display_name', "Không xác định"),
+#                     "location": result.get('location', {}).get('display_name', "Không xác định"),
+#                     "url": result.get('redirect_url')
+#                 })
+#             return jobs
+#         else:
+#             print(f"Error fetching jobs: {response.status_code}")
+#             return []
+#     except Exception as e:
+#         print(f"Error in job search: {e}")
+#         return []
+
+
+# Hàm tìm kiếm việc làm bằng SearchAPI.io
+def search_job(job_title, location="VietNam"):
+    url = "https://www.searchapi.io/api/v1/search"
     params = {
-        "app_id": ADZUNA_APP_ID,
-        "app_key": ADZUNA_API_KEY,
-        "what": job_title,
-        "results_per_page": 10
+        "engine": "google_jobs",  # Sử dụng Google Jobs engine
+        "q": f"{job_title} jobs in {location}",  # Truy vấn tìm kiếm
+        "hl": "en",  # Ngôn ngữ kết quả
+        "api_key": "s3HFeBsSFRkTN8WKvpNqa3zJ"  # Thay thế bằng API key của bạn
     }
+
     try:
         response = requests.get(url, params=params)
         if response.status_code == 200:
             data = response.json()
             jobs = []
-            for result in data.get('results', []):
+
+            # Duyệt qua danh sách công việc trong kết quả
+            for job in data.get("jobs", []):
+                title = job.get("title", "Không xác định")
+                company = job.get("company_name", "Không xác định")
+                location = job.get("location", "Không xác định")
+
+                # Tạo URL tìm kiếm Google Jobs thủ công
+                search_query = f"{title} {company} {location}".replace(" ", "+")
+                google_url = f"https://www.google.com/search?q={search_query}"
+
                 jobs.append({
-                    "title": result.get('title'),
-                    "company": result.get('company', {}).get('display_name', "Không xác định"),
-                    "location": result.get('location', {}).get('display_name', "Không xác định"),
-                    "url": result.get('redirect_url')
+                    "title": title,
+                    "company": company,
+                    "location": location,
+                    "description": job.get("snippet", ""),
+                    "url": google_url  # Link tới tìm kiếm Google Jobs
                 })
+
             return jobs
         else:
-            print(f"Error fetching jobs: {response.status_code}")
+            print(f"Lỗi khi gọi SearchAPI.io: {response.status_code}")
             return []
     except Exception as e:
-        print(f"Error in job search: {e}")
+        print(f"Lỗi trong quá trình tìm kiếm công việc: {e}")
         return []
 
 # View xử lý trang gợi ý
